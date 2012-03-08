@@ -30,16 +30,17 @@ def get_subgrams(ngram, grams):
 	# keylist should be a sep separated string. If it's characters, have sep='\0'. If it's words, same thing works, but ' ' allows for pretty printing
 	key = keyjoin(ngram)
 	children = {}
+	keylen = len(key)
 	for gramkey in grams:
 		if gramkey.count(sep) == (key.count(sep)+1): # only look at the next possible word
-			if gramkey[0:len(key)] == key:
+			if gramkey[0:keylen] == key and gramkey[keylen] == sep: # don't let annointment be chosen from an
 				children[gramkey] = grams[gramkey]
 	#DEBUGGING
 	#print "key = %s" % key
 	#print "children ="
 	#for i in children:
 		#print "\t%s" % i
-	return children
+	#return children
 
 from random import choice
 def rand_selection(elements):
@@ -70,7 +71,7 @@ def choose_child(existing, grams, level):
 	#for key in pos_subgrams:
 		#next_probs[" ".join(key.split(sep)[-1:])] = float(pos_subgrams[key])/num_subgrams
 	#for a in next_probs:
-		#print "P(%s | %s) = %f" % (a, slice, next_probs[a])
+		#print "P(%s | %s) = %f" % (a, _slice, next_probs[a])
 	
 	next_pop = [] # hold possible next words
 	for gram in pos_subgrams:
@@ -84,7 +85,7 @@ def choose_child(existing, grams, level):
 	else:	
 		return rand_selection(next_pop)
 
-def stochastic_walk(source, length, level, ngrams=None):
+def stochastic_walk(source, length, level, ngrams=None, sep='\0'):
 	# Use a source to figure out probabilities of elements (characters, words, whatever)
 	# appearing after other elements. Randomly choose a starting element from the source,
 	# and then use those probabilities to randomly generate a new set of elements.
