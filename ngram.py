@@ -40,7 +40,7 @@ def get_subgrams(ngram, grams):
 	#print "children ="
 	#for i in children:
 		#print "\t%s" % i
-	#return children
+	return children
 
 from random import choice
 def rand_selection(elements):
@@ -55,6 +55,19 @@ def rand_selection(elements):
 			population.append(val)
 	return choice(population)
 
+from random import random
+def rand_selection2(elements):
+	#slow????
+	totals = []
+	running_total = 0
+	for w in map(lambda x: x[1], elements):
+		running_total += w
+		totals.append(running_total)
+	rnd = random()*running_total
+	for i, total in enumerate(totals):
+		if rnd < total:
+			return elements[i][0]
+
 def choose_child(existing, grams, level):
 	# Given some existing amount of text to look at, look at most level elements
 	# back and use that (and the count frequency dictionary, grams) to randomly
@@ -64,9 +77,9 @@ def choose_child(existing, grams, level):
 		return choice(list(set([i for i in grams if len(i.split(sep)) == 1]))) # choose a new word
 	_slice = existing[-level:] # take at most the last level words
 	pos_subgrams = get_subgrams(_slice, grams)
-	num_subgrams = len(pos_subgrams)
 	
 	#DEBUGGING
+	#num_subgrams = len(pos_subgrams)
 	#next_probs = {}
 	#for key in pos_subgrams:
 		#next_probs[" ".join(key.split(sep)[-1:])] = float(pos_subgrams[key])/num_subgrams
