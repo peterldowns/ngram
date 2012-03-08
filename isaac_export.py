@@ -15,7 +15,7 @@ dq.split(" ") # dq as a string is a list of characters. make it a list of words.
 from ngram import stochastic_walk, calc_up_to_ngram
 n_grams = calc_up_to_ngram(dq, 1) # 1 is the level, basically word counts
 
-# save the ngram dictinoary to a file using pickle
+# save the ngram dictionary to a file using pickle
 import pickle
 with open("donquixote_ngram_dict.pk", "w") as of:
 	pickle.dump(n_grams, of)
