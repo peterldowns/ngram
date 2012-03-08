@@ -1,16 +1,18 @@
-sep = "\0" # separating symbol
-
-def calc_ngram(n, source, keyjoin=lambda x: sep.join(map(str, x)) ):
+sep = " " # separating symbol
+keyjoin = lambda x: sep.join(map(str, x))
+def calc_ngram(n, source):
 	# calculates ngrams on lists. By default, tries to coerce everything
 	# to a string and then sep.join the strings, but any suitable
 	# joining function may be supplied.
+
+	# n is the length of the gram. n=5 -> 5-gram. 
 	source_len = len(source)
 	print "Calculating n-gram level %d" % n
 	grams = {}
 	if source_len < n:
 		return grams
 	for i in xrange(source_len+1-n):
-		gramkey = keyjoin(source[i:i+n])
+		gramkey = keyjoin(source[i:i+n]) # can't use lists as hashkeys.
 		grams.setdefault(gramkey, 0)
 		grams[gramkey] += 1
 	return grams
@@ -24,19 +26,19 @@ def calc_up_to_ngram(source, level=1):
 		counts.update(calc_ngram(n, source))
 	return counts
 
-def get_subgrams(keystr, grams):
-	# key should be a sep separated string
-	#keystr = sep.join(map(str, keylist)) #uncomment this to work with non-characters
+def get_subgrams(ngram, grams):
+	# keylist should be a sep separated string. If it's characters, have sep='\0'. If it's words, same thing works, but ' ' allows for pretty printing
+	key = keyjoin(ngram)
 	children = {}
 	for gramkey in grams:
-		if gramkey.count(sep) == (keystr.count(sep)+1): # only look at the next possible word
-			if gramkey[0:len(keystr)] == keystr:
+		if gramkey.count(sep) == (key.count(sep)+1): # only look at the next possible word
+			if gramkey[0:len(key)] == key:
 				children[gramkey] = grams[gramkey]
 	#DEBUGGING
 	#print "key = %s" % key
 	#print "children ="
 	#for i in children:
-	#	print "\t%s" % i
+		#print "\t%s" % i
 	return children
 
 from random import choice
@@ -57,27 +59,27 @@ def choose_child(existing, grams, level):
 	# back and use that (and the count frequency dictionary, grams) to randomly
 	# select the next element
 	if level < 1:
-		print "Level = 0; choosing a new word"
-		return choice(list(set([i for i in grams if len(i.split()) == 1]))) # choose a new word
-	slice = sep.join(existing.split(sep)[-level:]) # take at most the last level words
-	pos_subgrams = get_subgrams(slice, grams)
+		print "Level < 1; choosing a new word"
+		return choice(list(set([i for i in grams if len(i.split(sep)) == 1]))) # choose a new word
+	_slice = existing[-level:] # take at most the last level words
+	pos_subgrams = get_subgrams(_slice, grams)
 	num_subgrams = len(pos_subgrams)
 	
 	#DEBUGGING
 	#next_probs = {}
 	#for key in pos_subgrams:
-	#	next_probs[" ".join(key.split()[-1:])] = float(pos_subgrams[key])/num_subgrams
+		#next_probs[" ".join(key.split(sep)[-1:])] = float(pos_subgrams[key])/num_subgrams
 	#for a in next_probs:
-	#	print "P(%s | %s) = %f" % (a, slice, next_probs[a])
+		#print "P(%s | %s) = %f" % (a, slice, next_probs[a])
 	
 	next_pop = [] # hold possible next words
-	for el in pos_subgrams:
-		key = el.split(sep)[-1] # for each whole child subgram, only look at the part that is different (the last element)
-		count = pos_subgrams[el]
-		next_pop.append((key, count))
+	for gram in pos_subgrams:
+		next_subgram = gram.split(sep)[-1] # for each whole child subgram, only look at the part that is different (the last element)
+		count = pos_subgrams[gram]
+		next_pop.append((next_subgram, count))
 
 	if len(next_pop) == 0: # couldn't find anything; no valid next elements based on past history
-		print "\"%s\" has no children. Trying shallower level ( %d -> %d)" % (slice,level, level-1)
+		print "No children. Trying shallower level ( %d -> %d)" % (level, level-1)
 		return choose_child(existing, grams, level-1) # ooh... recursive!
 	else:	
 		return rand_selection(next_pop)
@@ -90,10 +92,10 @@ def stochastic_walk(source, length, level, ngrams=None):
 		ngrams = calc_up_to_ngram(source, level)
 	seed = choice(list(set(source)))
 	print "Seed: %s" % seed
-	text = [seed]
+	out = [seed] # this is the output list
 	
-	while len(text) < length:
-		next = choose_child(sep.join(text), ngrams, level)
-		text.append(next)
-	return "".join(text)
+	while len(out) < length:
+		_next = choose_child(out, ngrams, level)
+		out.append(_next)
+	return out
 
